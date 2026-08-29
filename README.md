@@ -209,7 +209,7 @@ flowchart LR
 Supporting directories:
 
 - `tests/` contains graph-construction, integration, parity, generation, and runtime tests.
-- `src/mobius/**/*_test.py` contains unit tests colocated with their implementation.
+- `src/mobius/**/*_test.py` contains unit tests co-located with their implementation.
 - `examples/` demonstrates text, multimodal, speech, and diffusion workflows.
 - `docs/` contains user guides, design documentation, and API reference material.
 
