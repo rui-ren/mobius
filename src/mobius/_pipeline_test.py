@@ -1052,6 +1052,17 @@ class TestManifestSchema:
 
 
 class TestPackagePersistence:
+    @pytest.mark.parametrize("save_kwargs, expected_workers", [({}, 8), ({"max_workers": 1}, 1)])
+    def test_save_forwards_max_workers(self, tmp_path, save_kwargs, expected_workers):
+        pkg = _simple_pipeline().build()
+        with mock.patch.object(
+            ModelPackage, "save", autospec=True, side_effect=ModelPackage.save
+        ) as save:
+            pkg.save(str(tmp_path), progress_bar=False, **save_kwargs)
+
+        assert save.call_args.kwargs["max_workers"] == expected_workers
+        assert PipelinePackage.load(str(tmp_path)).manifest == pkg.manifest
+
     def test_save_load_round_trip(self, tmp_path):
         pkg = _simple_pipeline().build()
         pkg.save(str(tmp_path), progress_bar=False)

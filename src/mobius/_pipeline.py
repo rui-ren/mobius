@@ -2819,6 +2819,7 @@ class PipelinePackage(ModelPackage):
         *,
         external_data: str = "onnx",
         max_shard_size_bytes: int | None = None,
+        max_workers: int = 8,
         components: Callable[[str], bool] | None = None,
         progress_bar: bool = True,
         check_weights: bool = True,
@@ -2853,6 +2854,7 @@ class PipelinePackage(ModelPackage):
             directory,
             external_data=external_data,
             max_shard_size_bytes=max_shard_size_bytes,
+            max_workers=max_workers,
             progress_bar=progress_bar,
             check_weights=check_weights,
         )
