@@ -175,7 +175,15 @@ class OpenVLAModel(nn.Module):
         self, state_dict: dict[str, torch.Tensor]
     ) -> dict[str, torch.Tensor]:
         result = {}
-        parameters = dict(self.named_parameters())
+        generated = {
+            "decoder.model.rotary_emb.cos_cache",
+            "decoder.model.rotary_emb.sin_cache",
+        }
+        parameters = {
+            name: parameter
+            for name, parameter in self.named_parameters()
+            if name not in generated
+        }
         for name, value in state_dict.items():
             if self.omitted_weight_reason(name) is not None:
                 if tuple(value.shape) != self._omitted_shapes[name]:

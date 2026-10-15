@@ -149,6 +149,17 @@ def test_weight_mapping_and_explicit_unused_parameter():
     assert result["embedding.embed_tokens.weight"] is embedding
 
 
+@pytest.mark.parametrize("cache", ["cos_cache", "sin_cache"])
+def test_checkpoint_cannot_overwrite_generated_rope_tables(cache):
+    module = OpenVLAModel(_tiny_config())
+    parameter = dict(module.named_parameters())[f"decoder.model.rotary_emb.{cache}"]
+    assert parameter.shape is not None
+    with pytest.raises(ValueError, match="Unknown OpenVLA parameter"):
+        module.preprocess_weights(
+            {f"language_model.model.rotary_emb.{cache}": torch.zeros(tuple(parameter.shape))}
+        )
+
+
 @pytest.mark.parametrize("image_sequence", [0, 4])
 def test_bos_insertion_and_empty_image_decode_in_actual_ort(tmp_path, image_sequence):
     ort = pytest.importorskip("onnxruntime")

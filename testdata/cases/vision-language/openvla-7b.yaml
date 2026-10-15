@@ -11,9 +11,13 @@ inputs:
 level: "L4+L5"
 
 skip_reason: >-
-  Generic full-policy golden integration remains blocked. The onnx-standard
-  FP32 profile passes the unchanged frozen full-source gate; the default export
-  profile still has 59 of 8849664 prefill-logit violations at atol=rtol=1e-4.
+  Generic full-policy golden integration remains blocked. The earlier export at
+  a96735020d46c41026d4beb40d88975b568adbf5, implementation tree
+  6ad139362701357bc1492099af392598bb7d1d813ca070795fc19833b0ec7e38,
+  passes the unchanged frozen full-source gate with the onnx-standard FP32
+  profile; its default export still has 59 of 8849664 prefill-logit violations
+  at atol=rtol=1e-4. This does not qualify the fork-main rebuild, whose fresh
+  full-weight requalification is pending.
   The reviewed image/source fixtures and VLA action-generation adapter are not
   integrated into the generic multimodal golden runner. Do not generate a golden
   from candidate outputs or interpret source-exact actions on one sample as

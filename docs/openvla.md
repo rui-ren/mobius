@@ -9,6 +9,13 @@ sample's preprocessing and seven action tokens/values exactly. With
 the unchanged all-element numerical gate. This is one CPU fixture, not
 representative robot-task evaluation or GPU qualification.
 
+**Evidence provenance:** the full-weight and all-node observations below were
+measured on the earlier upstream-based export at
+`a96735020d46c41026d4beb40d88975b568adbf5`, implementation tree
+`6ad139362701357bc1492099af392598bb7d1d813ca070795fc19833b0ec7e38`.
+They do not by themselves qualify this fork-main rebuild. Its independent
+original-class tiny tests pass; fresh full-weight fork qualification is pending.
+
 ## Build
 
 Review the pinned model implementation and its model/Llama license obligations
@@ -66,6 +73,8 @@ All 982 source tensor names/shapes were audited: 939 map into parameters and 43
 have exact-name, exact-shape omissions. Those omissions are the final vision
 blocks, final normalizations and SigLIP pooling head, which cannot affect the
 selected intermediate patch features. Unknown or wrong-shaped tensors reject.
+Generated RoPE sine/cosine tables are not source checkpoint parameters and cannot
+be overwritten by shape-correct checkpoint entries.
 The original timm forward still executes the final blocks; omitting their
 unused outputs does not alter the selected features.
 
