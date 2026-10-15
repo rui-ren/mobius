@@ -139,6 +139,8 @@ __all__ = [
     "VisionEncoder",
     "VisionEncoderLayer",
     "VisionModel",
+    "DinoV2PatchFeatures",
+    "SiglipPatchFeatures",
     "Yasa2VisionSidecar",
     "ExactGELUMLPProjector",
     "FixedResolutionSiglipMLPSidecar",
@@ -161,7 +163,7 @@ __all__ = [
     "initialize_rope",
     "make_quantized_linear_factory",
     "make_clippable_quantized_linear_factory",
-    "siglip2_naflex_attention_mask",
+    "siglip2_naflex_attention_mask", "TorchDefaultRope",
 ]
 
 from mobius.components._activations import SiLU, get_activation
@@ -453,7 +455,11 @@ from mobius.components._rms_norm import (
     ScaleFreeRMSNorm,
     apply_rms_norm,
 )
-from mobius.components._rotary_embedding import apply_rotary_pos_emb, initialize_rope
+from mobius.components._rotary_embedding import (
+    TorchDefaultRope,
+    apply_rotary_pos_emb,
+    initialize_rope,
+)
 from mobius.components._sanm_attention import (
     SANMFFN as SANMFFN,
 )
@@ -476,6 +482,7 @@ from mobius.components._ssm import (
     SelectiveScan,
     SequenceSelectiveScan,
 )
+from mobius.components._timm_patch_features import DinoV2PatchFeatures, SiglipPatchFeatures
 from mobius.components._vision import (
     PatchEmbedding,
     VisionAttention,
