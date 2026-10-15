@@ -9,12 +9,25 @@ sample's preprocessing and seven action tokens/values exactly. With
 the unchanged all-element numerical gate. This is one CPU fixture, not
 representative robot-task evaluation or GPU qualification.
 
-**Evidence provenance:** the full-weight and all-node observations below were
-measured on the earlier upstream-based export at
+**Evidence provenance:** the historical full-weight and all-node observations
+below were measured on the earlier upstream-based export at
 `a96735020d46c41026d4beb40d88975b568adbf5`, implementation tree
 `6ad139362701357bc1492099af392598bb7d1d813ca070795fc19833b0ec7e38`.
-They do not by themselves qualify this fork-main rebuild. Its independent
-original-class tiny tests pass; fresh full-weight fork qualification is pending.
+They do not by themselves qualify this fork-main rebuild. A separate fresh
+full-weight run has now qualified the reviewed fork implementation
+`f049872a1e240a360e9120e606abf5fe2a75c627`, implementation tree
+`0e8882248870d8413f73945ab675760bc678273da1035d286684659b62bffb01`.
+The [fork CPU record](https://github.com/rui-ren/Atlas/blob/16c13e828485de4d39e3f173527ea11de17b4ddd/docs/evidence/openvla-fork-trial-cpu.json)
+binds an actual coordinated export, all 133 original-source boundaries and 128
+cache outputs, exact own-cache actions, and freshly regenerated independent
+standard-ONNX references for all 1,339 nodes / 1,501 outputs. Guarded CLI replay
+preserves result bytes/mtime without exporting or constructing the runtime.
+The [separate HTTP record](https://github.com/rui-ren/Atlas/blob/16c13e828485de4d39e3f173527ea11de17b4ddd/docs/evidence/openvla-fork-trial-http.json)
+binds the same manifest and records exact actions, concurrency, deadline recovery
+and request-local cache isolation on a temporary loopback CPU server, now stopped.
+The six package files are byte-identical to the historical standard package;
+the new records nevertheless retain their own exporter/source/node identities.
+Later documentation-only commits leave the qualified implementation unchanged.
 
 ## Build
 

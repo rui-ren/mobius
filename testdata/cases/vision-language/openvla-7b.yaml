@@ -16,8 +16,13 @@ skip_reason: >-
   6ad139362701357bc1492099af392598bb7d1d813ca070795fc19833b0ec7e38,
   passes the unchanged frozen full-source gate with the onnx-standard FP32
   profile; its default export still has 59 of 8849664 prefill-logit violations
-  at atol=rtol=1e-4. This does not qualify the fork-main rebuild, whose fresh
-  full-weight requalification is pending.
+  at atol=rtol=1e-4. The fork rebuild was separately freshly qualified at
+  f049872a1e240a360e9120e606abf5fe2a75c627, implementation tree
+  0e8882248870d8413f73945ab675760bc678273da1035d286684659b62bffb01:
+  all 133 source boundaries, 128 cache outputs, seven own-cache actions and
+  1339 nodes / 1501 outputs pass on that one frozen CPU fixture. Its actual
+  coordinator, guarded replay and loopback HTTP records are separate Atlas
+  evidence; later documentation-only commits do not change that implementation.
   The reviewed image/source fixtures and VLA action-generation adapter are not
   integrated into the generic multimodal golden runner. Do not generate a golden
   from candidate outputs or interpret source-exact actions on one sample as
