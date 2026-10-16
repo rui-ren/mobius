@@ -1,40 +1,16 @@
-# OpenVLA: experimental conversion
+# OpenVLA: experimental ONNX export
 
-Mobius can construct, load and save the complete
-`openvla/openvla-7b@47a0ec7fc4ec123775a391911046cf33cf9ed83f` policy as three
-portable ONNX components. This is **experimental conversion support**, not a
-qualified robot policy. Full-weight CPU execution reproduces one frozen source
-sample's preprocessing and seven action tokens/values exactly. With
-`execution_provider="onnx-standard"`, all captured full-model outputs also pass
-the unchanged all-element numerical gate. This is one CPU fixture, not
-representative robot-task evaluation or GPU qualification.
+Mobius exports **`openvla/openvla-7b`** as three portable FP32 ONNX components.
+The standard-ONNX package passes one frozen full-weight **CPU** reference sample.
+This is experimental conversion support, **not a qualified robot policy**.
+H100 execution still fails the strict prefill-logit gate.
 
-**Evidence provenance:** the historical full-weight and all-node observations
-below were measured on the earlier upstream-based export at
-`a96735020d46c41026d4beb40d88975b568adbf5`, implementation tree
-`6ad139362701357bc1492099af392598bb7d1d813ca070795fc19833b0ec7e38`.
-They do not by themselves qualify this fork-main rebuild. A separate fresh
-full-weight run has now qualified the reviewed fork implementation
-`f049872a1e240a360e9120e606abf5fe2a75c627`, implementation tree
-`0e8882248870d8413f73945ab675760bc678273da1035d286684659b62bffb01`.
-The [fork CPU record](https://github.com/rui-ren/Atlas/blob/16c13e828485de4d39e3f173527ea11de17b4ddd/docs/evidence/openvla-fork-trial-cpu.json)
-binds an actual coordinated export, all 133 original-source boundaries and 128
-cache outputs, exact own-cache actions, and freshly regenerated independent
-standard-ONNX references for all 1,339 nodes / 1,501 outputs. Guarded CLI replay
-preserves result bytes/mtime without exporting or constructing the runtime.
-The [separate HTTP record](https://github.com/rui-ren/Atlas/blob/16c13e828485de4d39e3f173527ea11de17b4ddd/docs/evidence/openvla-fork-trial-http.json)
-binds the same manifest and records exact actions, concurrency, deadline recovery
-and request-local cache isolation on a temporary loopback CPU server, now stopped.
-The six package files are byte-identical to the historical standard package;
-the new records nevertheless retain their own exporter/source/node identities.
-Later documentation-only commits leave the qualified implementation unchanged.
+## Export
 
-## Build
-
-Review the pinned model implementation and its model/Llama license obligations
-before acquiring weights. Download the three safetensors shards and configuration
-assets from the exact revision into a local directory; verify their published
-identities independently. The public API does not need remote-code execution:
+Use checkpoint revision `47a0ec7fc4ec123775a391911046cf33cf9ed83f`.
+Review the model implementation and OpenVLA/Llama licenses, then download and
+independently verify its three safetensors shards and configuration assets.
+Remote-code execution is not required.
 
 ```python
 import torch
@@ -50,109 +26,58 @@ package = build(
 package.save("/absolute/fresh/openvla-onnx", max_workers=4, progress_bar=False)
 ```
 
-Allow approximately 15 GB for source tensors and 30 GB for the FP32 package,
-plus temporary files and substantial CPU RAM. The portable graphs use opset 24;
-the demonstrated runtime is ORT 1.31 CPU, not older opset-21 runtimes.
-Use the standard-ONNX profile for this strict CPU baseline. The `default`
-export profile fuses residual normalization into contrib kernels and still
-fails the full-checkpoint logit gate. The `cpu` export profile adds other
-provider-specific rewrites and is not qualified. A profile that loads or matches actions is
-not interchangeable with the qualified graph bytes.
-Other precisions, execution-provider rewrites and quantization are unqualified.
-Non-default/scaled RoPE and quantization requests fail explicitly.
+Allow roughly **15 GB for weights and 30 GB for the FP32 export**, plus temporary
+files and substantial CPU RAM. The graphs use **opset 24**; demonstrated execution
+uses **ONNX Runtime 1.31**, not older opset-21 runtimes.
 
-## Components and checkpoint accounting
+Use `onnx-standard` for the validated CPU baseline. The `default` profile's fused
+residual-normalization path fails the full-checkpoint CPU logit gate; the `cpu`
+profile and other provider-specific rewrites are unqualified. Matching actions
+or successfully loading a graph does not make these profiles interchangeable.
+
+## Exported package
+
+Each component has a `model.onnx` and `model.onnx.data`:
 
 | Component | Inputs | Outputs |
 |---|---|---|
-| `vision_encoder` | FP32 pixels `[B,6,224,224]` | projected features `[B,256,4096]` |
-| `embedding` | INT64 text tokens; FP32 image features | embeddings with image patches after BOS |
-| `decoder` | embeddings, INT64 mask/positions, 32 layers of past key/value state | logits and fresh per-layer key/value state |
+| `vision_encoder` | FP32 pixels `[B,6,224,224]` | Projected features `[B,256,4096]` |
+| `embedding` | INT64 text tokens and image features | Embeddings with image patches after BOS |
+| `decoder` | Embeddings, INT64 mask/positions, 32 layers of past KV state | Logits and updated KV state |
 
-Each component saves `model.onnx` with its own `model.onnx.data`. The
-standard-ONNX package has 811 vision, 4 embedding and 524 decoder nodes, with no
-local functions or custom-domain operators. The caller
-owns preprocessing, prompt construction, generation, state and action decoding;
-this package does not claim ORT-GenAI architecture integration.
+The caller owns preprocessing, prompts, generation, request-local caches and
+action decoding. **ORT-GenAI architecture integration is not provided.**
+The package uses standard ONNX operators, without custom domains or local functions.
 
-The fused backbone selects the second-to-last unnormalized patch features from
-DINOv2-L/14-reg4 and SigLIP-so400m/14. DINO position embeddings apply to patches,
-not class/register tokens. Exact GELUs, LayerScale and the biased three-layer
-projector follow the original implementation. The decoder materializes omitted
-Llama-2 defaults and uses Torch FP32 default RoPE construction; other models keep
-their existing RoPE policy.
+## What has been validated
 
-All 982 source tensor names/shapes were audited: 939 map into parameters and 43
-have exact-name, exact-shape omissions. Those omissions are the final vision
-blocks, final normalizations and SigLIP pooling head, which cannot affect the
-selected intermediate patch features. Unknown or wrong-shaped tensors reject.
-Generated RoPE sine/cosine tables are not source checkpoint parameters and cannot
-be overwritten by shape-correct checkpoint entries.
-The original timm forward still executes the final blocks; omitting their
-unused outputs does not alter the selected features.
+For reviewed implementation `f049872a1e240a360e9120e606abf5fe2a75c627`,
+one full-weight CPU sample passes all 133 captured source boundaries, 128 cache
+outputs and seven exact own-cache action tokens/values. Matched-operand ONNX
+reference replay also passes all 1,339 nodes / 1,501 outputs.
 
-## Numerical evidence and limitations
+The gate is **`abs(actual-reference) <= 1e-4 + 1e-4*abs(reference)`**, not absolute
+error alone. Per-node replay is not original-class tracing of every primitive.
 
-An independently executed original-class tiny fixture passes actual ORT CPU
-comparisons for both towers, projection, BOS insertion, prefill, decode and all
-caches at `atol=1e-6, rtol=1e-5`. This randomized fixture is not checkpoint parity.
-Replay it with:
+For the separate randomized tiny-model CPU fixture:
 
 ```bash
 MOBIUS_OPENVLA_REFERENCE=/absolute/independent/tiny-fixture \
 python -m pytest tests/integration/openvla_test.py -q
 ```
 
-The pinned `testdata/cases/vision-language/openvla-7b.yaml` records the blocked
-multimodal-decoder golden scope with an explicit `skip_reason`. It does not
-contain a fabricated passing golden or claim that VLA outputs are ordinary text.
-The independent image/source fixtures and action-generation application still
-need integration into the generic golden runner. Registry/config/CLI coverage
-passing is not that qualification.
+That fixture requires independently generated references and does not establish
+full-checkpoint parity. The generic multimodal golden runner remains explicitly
+blocked pending image/reference and action-generation integration.
 
-The full checkpoint reference uses original Torch 2.6 / Transformers 4.40.1 /
-timm 0.9.10, BF16 source tensors upcast to FP32 and eager CPU execution.
-The export environment uses Torch 2.14.1. Original and exported RoPE tables were
-independently checked bit-for-bit across all 2048 positions.
+## Remaining limits
 
-At frozen `atol=rtol=1e-4`, the standard-ONNX profile passes every captured
-boundary, all 8,849,664 prefill logits, decode logits and all 128 prefill/decode
-cache outputs. All seven own-cache greedy action tokens agree. Maximum absolute
-prefill-logit error is 0.00014656782150268555; the gate is the elementwise
-**absolute-plus-relative** criterion, not absolute error alone.
+**H100 qualification remains blocked** despite matching actions; it is separate
+from the passing CPU baseline. A specific ORT kernel defect has not been proven.
+Other precisions, quantization and non-default/scaled RoPE are unsupported or
+unqualified. Quantization and non-default/scaled RoPE requests fail explicitly.
 
-The earlier `default` export has 59 prefill-logit failures, or 31 with original
-embeddings. Independent matched-operand probes found substantially larger
-rounding error in the contrib `SkipSimplifiedLayerNormalization` kernel than in
-standard `Add` plus `RMSNormalization`; residual sums and epsilon were identical.
-Inlining decoder norms eliminates all source-embedding-control failures, but
-leaves five own-embedding failures. Expanding the vision residual norms too
-eliminates those remaining failures. A fresh export through the existing
-`onnx-standard` profile reproduces the complete pass without post-export surgery,
-FP64 arithmetic, changed reference data or relaxed tolerances. A specific ORT
-implementation defect or internal rsqrt mechanism has not been established.
-Higher-precision MLP and variance controls were not incorporated.
-
-This evidence covers one fixed image/instruction and semantic boundaries, not
-every primitive graph output, representative action quality, latency targets,
-GPU providers or the Windows RTX 4090 pilot. Keep production and release gates
-closed. Any later Olive/quantization rewrite must preserve this passing baseline
-and earn its own numerical and end-task evidence.
-
-The clean upstream-based contribution was independently re-exported and the same
-full-checkpoint results reproduced. Atlas also compared all four embedding
-nodes (`Gather`, two `Slice`, `Concat`) against a separate original-class
-embedding-subpath producer: 1,294,336 elements match at zero tolerances, with
-every embedding weight byte and instrumentation-control output byte verified.
-Sequential and four-worker reports are identical. That original-class subpath
-scope is four nodes, not independent original-class traces for every primitive.
-
-The standard-profile package additionally passes spec-level matched-operand
-replay for all 1,339 nodes and 1,501 nonempty outputs (1,343,031,391 elements)
-through independent ONNX reference kernels at `atol=rtol=1e-4`. Every original
-component output remains byte-identical under instrumentation, and all 939
-used checkpoint parameters/transposes match an independent original-source
-identity oracle. Atlas's 169 bounded capture shards retain the 256MiB per-NPZ
-limit and produce identical sequential/four-worker reports. This is per-node
-spec evidence on one sample, not universal operator correctness or original-
-class primitive traces. The separate full-model reference remains original code.
+There is no representative robot-task evaluation, held-out certification,
+latency qualification or production admission. Any Olive optimization,
+quantization or provider rewrite must earn fresh numerical and task-quality
+evidence. **Keep production and release gates closed.**
